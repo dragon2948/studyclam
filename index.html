@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyCalm</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- App Shell -->
+  <div id="app">
+
+    <!-- ── HOME PAGE ── -->
+    <section id="page-home" class="page active">
+      <div class="top-bar">
+        <div>
+          <p class="greeting-sub">Good morning</p>
+          <h2 class="greeting-name">Alex ☀️</h2>
+        </div>
+        <div class="avatar">A</div>
+      </div>
+
+      <p class="section-label">How are you feeling today?</p>
+      <div class="mood-row">
+        <button class="mood-btn" data-mood="1">😠<span>Anxious</span></button>
+        <button class="mood-btn" data-mood="2">😟<span>Stressed</span></button>
+        <button class="mood-btn" data-mood="3">😐<span>Okay</span></button>
+        <button class="mood-btn" data-mood="4">🙂<span>Good</span></button>
+        <button class="mood-btn" data-mood="5">😄<span>Great</span></button>
+      </div>
+
+      <div class="card checkin-card">
+        <div class="checkin-icon">🧠</div>
+        <div>
+          <p class="card-title">Daily Check-in</p>
+          <p class="card-sub">Track your mood and stress level in 1 minute</p>
+        </div>
+        <button class="btn-primary small" onclick="navigate('journal')">Check-in</button>
+      </div>
+
+      <p class="section-label">Today's Plan</p>
+      <div class="card task-list">
+        <div class="task-item">
+          <input type="checkbox" id="t1" checked /><label for="t1">Attend Lecture</label>
+        </div>
+        <div class="task-item">
+          <input type="checkbox" id="t2" /><label for="t2">Read Chapter 4</label>
+        </div>
+        <div class="task-item">
+          <input type="checkbox" id="t3" /><label for="t3">Practice Questions</label>
+        </div>
+        <div class="task-item">
+          <input type="checkbox" id="t4" /><label for="t4">Mindful Break (5 min)</label>
+        </div>
+        <button class="btn-text" onclick="addTask()">+ Add task</button>
+      </div>
+    </section>
+
+    <!-- ── TOOLS PAGE ── -->
+    <section id="page-tools" class="page">
+      <div class="top-bar">
+        <h2 class="page-title">Tools</h2>
+      </div>
+
+      <p class="section-label">Recommended for you</p>
+      <div class="tools-grid">
+        <div class="tool-card blue" onclick="openTool('breathing')">
+          <span class="tool-icon">💨</span>
+          <p class="tool-name">Breathing Exercise</p>
+          <p class="tool-time">2 min</p>
+        </div>
+        <div class="tool-card pink" onclick="openTool('meditation')">
+          <span class="tool-icon">🪷</span>
+          <p class="tool-name">Guided Meditation</p>
+          <p class="tool-time">5 min</p>
+        </div>
+        <div class="tool-card purple" onclick="openTool('focus')">
+          <span class="tool-icon">⏱️</span>
+          <p class="tool-name">Focus Timer</p>
+          <p class="tool-time">25 min</p>
+        </div>
+        <div class="tool-card green" onclick="openTool('cbt')">
+          <span class="tool-icon">💬</span>
+          <p class="tool-name">Thought Challenger</p>
+          <p class="tool-time">CBT Tool</p>
+        </div>
+      </div>
+
+      <p class="section-label">All Tools</p>
+      <div class="card list-card" onclick="navigate('journal')">
+        <span class="list-icon">📓</span>
+        <span>Gratitude Journal</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="card list-card">
+        <span class="list-icon">🌙</span>
+        <span>Sleep Better</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="card list-card">
+        <span class="list-icon">📅</span>
+        <span>Exam Prep Planner</span>
+        <span class="chevron">›</span>
+      </div>
+    </section>
+
+    <!-- ── JOURNAL / INSIGHTS PAGE ── -->
+    <section id="page-journal" class="page">
+      <div class="top-bar">
+        <h2 class="page-title">Stress Insights</h2>
+      </div>
+
+      <div class="tab-row">
+        <button class="tab active" data-tab="week">Week</button>
+        <button class="tab" data-tab="month">Month</button>
+        <button class="tab" data-tab="year">Year</button>
+      </div>
+
+      <div class="card">
+        <p class="card-title">Stress Trend</p>
+        <p class="card-sub">You've been feeling more stressed this week.</p>
+        <div class="chart-wrap">
+          <canvas id="stressChart"></canvas>
+        </div>
+        <div class="chart-labels">
+          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+        </div>
+      </div>
+
+      <p class="section-label">Top Triggers</p>
+      <div class="card triggers">
+        <div class="trigger-row">
+          <span>Workload</span>
+          <div class="bar-bg"><div class="bar-fill" style="width:62%"></div></div>
+          <span>62%</span>
+        </div>
+        <div class="trigger-row">
+          <span>Exams</span>
+          <div class="bar-bg"><div class="bar-fill" style="width:48%"></div></div>
+          <span>48%</span>
+        </div>
+        <div class="trigger-row">
+          <span>Sleep</span>
+          <div class="bar-bg"><div class="bar-fill" style="width:35%"></div></div>
+          <span>35%</span>
+        </div>
+      </div>
+
+      <p class="section-label">What helps you</p>
+      <div class="helps-row">
+        <span class="helps-chip">🧘 Meditation</span>
+        <span class="helps-chip">🎵 Music</span>
+        <span class="helps-chip">🏃 Exercise</span>
+      </div>
+    </section>
+
+    <!-- ── SUPPORT PAGE ── -->
+    <section id="page-support" class="page">
+      <div class="top-bar">
+        <h2 class="page-title">Support &amp; Connection</h2>
+      </div>
+
+      <div class="card support-hero">
+        <p class="hero-title">You're not alone 💜</p>
+        <p class="card-sub">Connect, share, and get support from your campus community.</p>
+      </div>
+
+      <div class="card list-card support-item">
+        <div class="support-icon blue">👥</div>
+        <div>
+          <p class="card-title">Peer Support Groups</p>
+          <p class="card-sub">Join a safe space</p>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+      <div class="card list-card support-item">
+        <div class="support-icon green">🤝</div>
+        <div>
+          <p class="card-title">Get Matched</p>
+          <p class="card-sub">Talk to a peer mentor</p>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+      <div class="card list-card support-item">
+        <div class="support-icon purple">📚</div>
+        <div>
+          <p class="card-title">Resources</p>
+          <p class="card-sub">Articles, videos, helplines</p>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+      <div class="card list-card support-item">
+        <div class="support-icon pink">🩺</div>
+        <div>
+          <p class="card-title">Talk to a Counselor</p>
+          <p class="card-sub">Book a session</p>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+    </section>
+
+    <!-- ── PROFILE PAGE ── -->
+    <section id="page-profile" class="page">
+      <div class="top-bar">
+        <h2 class="page-title">Profile</h2>
+      </div>
+
+      <div class="card profile-card">
+        <div class="profile-avatar">A</div>
+        <p class="profile-name">Alex</p>
+        <p class="card-sub">2nd Year · Computer Science</p>
+      </div>
+
+      <div class="card stats-row">
+        <div class="stat">
+          <p class="stat-num">12</p>
+          <p class="stat-label">Day Streak</p>
+        </div>
+        <div class="stat">
+          <p class="stat-num">8</p>
+          <p class="stat-label">Sessions</p>
+        </div>
+        <div class="stat">
+          <p class="stat-num">4.2</p>
+          <p class="stat-label">Avg Mood</p>
+        </div>
+      </div>
+
+      <p class="section-label">Settings</p>
+      <div class="card list-card"><span class="list-icon">🔔</span><span>Notifications</span><span class="chevron">›</span></div>
+      <div class="card list-card"><span class="list-icon">🎨</span><span>Appearance</span><span class="chevron">›</span></div>
+      <div class="card list-card"><span class="list-icon">🔒</span><span>Privacy</span><span class="chevron">›</span></div>
+      <div class="card list-card"><span class="list-icon">ℹ️</span><span>About StudyCalm</span><span class="chevron">›</span></div>
+    </section>
+
+    <!-- ── OVERLAYS ── -->
+
+    <!-- Breathing Tool -->
+    <div id="overlay-breathing" class="overlay">
+      <div class="overlay-card">
+        <button class="close-btn" onclick="closeOverlay()">✕</button>
+        <h2>Breathing Exercise</h2>
+        <div class="breathe-circle" id="breatheCircle"></div>
+        <p id="breatheLabel" class="breathe-label">Inhale</p>
+        <p class="card-sub" style="text-align:center">Follow the circle to calm your nervous system</p>
+        <button class="btn-primary" id="breatheBtn" onclick="toggleBreathe()">Start</button>
+      </div>
+    </div>
+
+    <!-- Focus Timer -->
+    <div id="overlay-focus" class="overlay">
+      <div class="overlay-card">
+        <button class="close-btn" onclick="closeOverlay()">✕</button>
+        <h2>Focus Timer</h2>
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <div class="timer-controls">
+          <button class="btn-outline" onclick="setTimer(5)">5m</button>
+          <button class="btn-outline" onclick="setTimer(25)">25m</button>
+          <button class="btn-outline" onclick="setTimer(45)">45m</button>
+        </div>
+        <button class="btn-primary" id="timerBtn" onclick="toggleTimer()">Start</button>
+      </div>
+    </div>
+
+    <!-- CBT Thought Challenger -->
+    <div id="overlay-cbt" class="overlay">
+      <div class="overlay-card cbt-card">
+        <button class="close-btn" onclick="closeOverlay()">✕</button>
+        <h2>CBT Thought Challenger</h2>
+
+        <div id="cbt-steps">
+          <div class="cbt-step active" data-step="1">
+            <p class="cbt-q">Identify the thought</p>
+            <input class="cbt-input" id="cbt1" placeholder="e.g. I'm going to fail this exam." />
+          </div>
+          <div class="cbt-step" data-step="2">
+            <p class="cbt-q">How does this thought make me feel?</p>
+            <input class="cbt-input" id="cbt2" placeholder="e.g. Anxious, scared..." />
+          </div>
+          <div class="cbt-step" data-step="3">
+            <p class="cbt-q">Challenge the thought</p>
+            <textarea class="cbt-input" id="cbt3" rows="3" placeholder="What's the evidence for and against this thought?"></textarea>
+          </div>
+          <div class="cbt-step" data-step="4">
+            <p class="cbt-q">Reframe the thought</p>
+            <input class="cbt-input" id="cbt4" placeholder="e.g. I am prepared and doing my best." />
+          </div>
+          <div class="cbt-step" data-step="5">
+            <p class="cbt-q">How do I feel now?</p>
+            <input class="cbt-input" id="cbt5" placeholder="e.g. More calm, hopeful..." />
+          </div>
+          <div class="cbt-step" data-step="6">
+            <div class="cbt-done">
+              <p style="font-size:2.5rem">🌱</p>
+              <p class="card-title">Reflection saved!</p>
+              <p class="card-sub">Great work challenging that thought.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="cbt-nav">
+          <button class="btn-outline" id="cbt-back" onclick="cbtBack()" style="display:none">Back</button>
+          <button class="btn-primary" id="cbt-next" onclick="cbtNext()">Next</button>
+        </div>
+        <div class="cbt-dots" id="cbt-dots"></div>
+      </div>
+    </div>
+
+    <!-- Meditation -->
+    <div id="overlay-meditation" class="overlay">
+      <div class="overlay-card">
+        <button class="close-btn" onclick="closeOverlay()">✕</button>
+        <h2>Guided Meditation</h2>
+        <div class="meditation-art">🪷</div>
+        <p class="card-title" style="text-align:center">5-Minute Body Scan</p>
+        <p class="card-sub" style="text-align:center">Close your eyes and follow along to release tension from head to toe.</p>
+        <div class="meditation-steps">
+          <p>1. Find a comfortable position</p>
+          <p>2. Close your eyes and breathe deeply</p>
+          <p>3. Notice each part of your body, starting from your head</p>
+          <p>4. Release any tension you feel</p>
+          <p>5. Return to the present moment</p>
+        </div>
+        <button class="btn-primary">Begin (Audio coming soon)</button>
+      </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" onclick="navigate('home')">
+        <span class="nav-icon">🏠</span><span>Home</span>
+      </button>
+      <button class="nav-btn" onclick="navigate('tools')">
+        <span class="nav-icon">🔧</span><span>Tools</span>
+      </button>
+      <button class="nav-btn" onclick="navigate('journal')">
+        <span class="nav-icon">📖</span><span>Journal</span>
+      </button>
+      <button class="nav-btn" onclick="navigate('support')">
+        <span class="nav-icon">💜</span><span>Support</span>
+      </button>
+      <button class="nav-btn" onclick="navigate('profile')">
+        <span class="nav-icon">👤</span><span>Profile</span>
+      </button>
+    </nav>
+
+  </div><!-- /app -->
+
+  <script src="app.js"></script>
+</body>
+</html>
