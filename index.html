@@ -161,9 +161,15 @@
         <h2 class="page-title">Support &amp; Connection</h2>
       </div>
 
-      <div class="card support-hero">
-        <p class="hero-title">You're not alone 💜</p>
-        <p class="card-sub">Connect, share, and get support from your campus community.</p>
+      <div class="card bot-hero-card">
+        <div class="bot-hero-top">
+          <div class="bot-avatar-lg">🤖</div>
+          <div>
+            <p class="hero-title">StudyBot 💜</p>
+            <p class="card-sub" id="bot-status-msg">Here to check in on you</p>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="openChat()">Chat with StudyBot</button>
       </div>
 
       <div class="card list-card support-item" onclick="navigate('groups')">
@@ -434,6 +440,28 @@
           <button class="btn-primary" onclick="finishOnboarding()">Enter App</button>
         </div>
 
+      </div>
+    </div>
+
+    <!-- Chat Overlay -->
+    <div id="overlay-chat" class="overlay">
+      <div class="overlay-card chat-card">
+        <div class="chat-header">
+          <div class="chat-avatar-sm">🤖</div>
+          <div>
+            <p class="chat-name">StudyBot</p>
+            <p class="chat-online">Online · Here to help 💜</p>
+          </div>
+          <button class="close-btn chat-close-btn" onclick="closeOverlay()">✕</button>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-quick-replies" id="chat-quick-replies"></div>
+        <div class="chat-input-row">
+          <input type="text" class="chat-input" id="chat-input"
+                 placeholder="Type a message..."
+                 onkeydown="if(event.key==='Enter')sendChatMessage()" />
+          <button class="chat-send" onclick="sendChatMessage()">➤</button>
+        </div>
       </div>
     </div>
 

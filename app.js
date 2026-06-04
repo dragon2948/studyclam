@@ -10,6 +10,7 @@ function navigate(page) {
   window.scrollTo(0, 0);
   if (page === 'journal') drawChart();
   if (page === 'groups')  renderAllGroups();
+  if (page === 'support') updateBotStatus();
 }
 
 // ── Mood Selection ───────────────────────────────────────────
@@ -439,3 +440,279 @@ if (localStorage.getItem('sc_survey_done')) {
   const saved = localStorage.getItem('sc_survey_answers');
   if (saved) surveyAnswers = JSON.parse(saved);
 }
+
+// ── StudyBot Chat ─────────────────────────────────────────────
+const TIPS = [
+  "Try the Pomodoro technique: 25 min focus, 5 min break. It really works! 🍅",
+  "Even a 10-minute walk lowers your cortisol (stress hormone) significantly. 🚶",
+  "Writing down worries before bed can help you sleep better. 📝",
+  "Social connection is one of the strongest predictors of wellbeing. 👥",
+  "5-4-3-2-1 grounding: name 5 things you see, 4 you hear, 3 you feel, 2 you smell, 1 you taste. 🧘",
+  "Breaking one big task into 3 small steps makes it feel achievable. ✅",
+  "Staying hydrated throughout the day reduces fatigue and improves focus. 💧",
+];
+let tipIndex = 0;
+let typingBubble = null;
+
+const CHAT_FLOWS = {
+  'Stressed 😟': {
+    messages: [
+      "I hear you 💜 Stress hits hard, especially with academic pressure.",
+      "You're already doing something right by checking in. What would help most right now?"
+    ],
+    replies: ['Try breathing', 'Challenge a thought', 'Connect with peers', 'Just needed to vent']
+  },
+  'Overwhelmed 😰': {
+    messages: [
+      "That sounds really tough 💜 When everything piles up it can feel impossible.",
+      "Let's take this one step at a time. What feels most urgent?"
+    ],
+    replies: ['Help me calm down', 'Talk through my thoughts', 'Connect with peers', 'Just needed to vent']
+  },
+  'Pretty okay 😐': {
+    messages: [
+      "Okay is totally valid 😊 Steady days count!",
+      "Anything on your mind, or just checking in?"
+    ],
+    replies: ['Actually a bit stressed', 'Find a study group', 'Share a tip', 'All good, thanks']
+  },
+  'Feeling good 🙂': {
+    messages: [
+      "Love to hear it! 🌟 Keep riding that wave!",
+      "Want to connect with others or explore a new community?"
+    ],
+    replies: ['Show me communities', 'Share a tip', 'All good, thanks']
+  },
+  'Try breathing': {
+    messages: ["Opening the Breathing Exercise for you 💨"],
+    action: () => { closeOverlay(); setTimeout(() => openTool('breathing'), 350); }
+  },
+  'Help me calm down': {
+    messages: ["Let's try a breathing exercise — just follow the circle 💨"],
+    action: () => { closeOverlay(); setTimeout(() => openTool('breathing'), 350); }
+  },
+  'Challenge a thought': {
+    messages: ["Let's work through that thought with the CBT tool 💬"],
+    action: () => { closeOverlay(); setTimeout(() => openTool('cbt'), 350); }
+  },
+  'Talk through my thoughts': {
+    messages: ["The Thought Challenger is great for this 💬"],
+    action: () => { closeOverlay(); setTimeout(() => openTool('cbt'), 350); }
+  },
+  'Connect with peers': {
+    messages: ["There are some great communities here for you 👥"],
+    action: () => { closeOverlay(); setTimeout(() => navigate('groups'), 350); }
+  },
+  'Show me communities': {
+    messages: ["Let me show you what's available 👥"],
+    action: () => { closeOverlay(); setTimeout(() => navigate('groups'), 350); }
+  },
+  'Find a study group': {
+    messages: ["Checking out the study communities for you 📚"],
+    action: () => { closeOverlay(); setTimeout(() => navigate('groups'), 350); }
+  },
+  'Try focus timer': {
+    messages: ["Opening the Focus Timer — try a 25-min session! ⏱️"],
+    action: () => { closeOverlay(); setTimeout(() => openTool('focus'), 350); }
+  },
+  'Just needed to vent': {
+    messages: [
+      "That's totally okay 💜 I'm here.",
+      "How are you feeling right now?"
+    ],
+    replies: ['A bit better', 'Still stressed', 'Thanks for listening']
+  },
+  'A bit better': {
+    messages: ["I'm glad 💜 Remember — one day at a time. You've got this!"],
+    replies: ['Share a tip', 'Close chat']
+  },
+  'Still stressed': {
+    messages: ["Let's try something practical — even 2 minutes of breathing can shift things."],
+    replies: ['Try breathing', 'Challenge a thought']
+  },
+  'Thanks for listening': {
+    messages: ["Always here for you 💜 Take care of yourself."],
+    replies: ['Close chat']
+  },
+  'Actually a bit stressed': {
+    messages: ["Hey, it's okay to admit that 💜 What's been stressing you out?"],
+    replies: ['Exams', 'Heavy workload', 'Social stuff', 'Everything at once']
+  },
+  'Exams': {
+    messages: [
+      "Exam stress is so common 😮‍💨 You're not alone.",
+      "Try breaking your study into 25-min sprints. Want to use the Focus Timer?"
+    ],
+    replies: ['Try focus timer', 'Connect with peers', 'Share a tip']
+  },
+  'Heavy workload': {
+    messages: [
+      "Heavy workloads can feel crushing 💜 One task at a time.",
+      "A focus timer can help you chip away at it steadily."
+    ],
+    replies: ['Try focus timer', 'Just needed to vent', 'Share a tip']
+  },
+  'Social stuff': {
+    messages: [
+      "Social dynamics can be really draining 💜",
+      "Connecting with even one like-minded person can make a big difference."
+    ],
+    replies: ['Show me communities', 'Just needed to vent']
+  },
+  'Everything at once': {
+    messages: [
+      "Breathe 💜 You don't have to solve everything today.",
+      "What's the ONE thing you'd tackle first?"
+    ],
+    replies: ['Help me calm down', 'Challenge a thought', 'Just needed to vent']
+  },
+  'Share a tip': { messages: [], replies: ['Another tip', "That's helpful!", 'Close chat'] },
+  'Another tip':  { messages: [], replies: ['Another tip', "That's helpful!", 'Close chat'] },
+  "That's helpful!": {
+    messages: ["Great! Small steps add up 💜 You've got this."],
+    replies: ['Close chat']
+  },
+  'All good, thanks': {
+    messages: ["Great! Come back anytime 😊 Take care!"],
+    close: true
+  },
+  'Close chat': {
+    messages: ["Take care 💜 I'm here whenever you need me!"],
+    close: true
+  }
+};
+
+function updateBotStatus() {
+  const el = document.getElementById('bot-status-msg');
+  if (!el) return;
+  const h = new Date().getHours();
+  if (h >= 22 || h < 3)  el.textContent = "It's late — checking in on you 🌙";
+  else if (h >= 19)       el.textContent = "Good evening — how are you holding up? 🌆";
+  else                    el.textContent = "Here to check in on you 💜";
+}
+
+function openChat() {
+  document.getElementById('overlay-chat').classList.add('open');
+  document.getElementById('chat-messages').innerHTML = '';
+  document.getElementById('chat-quick-replies').innerHTML = '';
+  typingBubble = null;
+
+  const h = new Date().getHours();
+  let openingMsgs;
+  if (h >= 22 || h < 3)   openingMsgs = ["Hey, it's pretty late 🌙 Are you doing okay?", "Late nights can be tough. How are you feeling?"];
+  else if (h >= 19)        openingMsgs = ["Good evening! 🌆", "How are you holding up today?"];
+  else if (h >= 6 && h < 12) openingMsgs = ["Good morning! ☀️", "How are you feeling today?"];
+  else                     openingMsgs = ["Hey there! 😊", "How are you doing right now?"];
+
+  openingMsgs.forEach((msg, i) => {
+    setTimeout(() => {
+      showBotTyping();
+      setTimeout(() => {
+        hideBotTyping();
+        showBotMessage(msg);
+        if (i === openingMsgs.length - 1) {
+          setTimeout(() => showQuickReplies(
+            ['Stressed 😟', 'Overwhelmed 😰', 'Pretty okay 😐', 'Feeling good 🙂']
+          ), 350);
+        }
+      }, 750);
+    }, i * 1300);
+  });
+}
+
+function processChatFlow(key) {
+  let flow = CHAT_FLOWS[key] || detectChatKeywords(key);
+  let msgs = flow.messages ? [...flow.messages] : [];
+
+  if (key === 'Share a tip' || key === 'Another tip') {
+    msgs = [TIPS[tipIndex % TIPS.length]];
+    tipIndex++;
+  }
+
+  if (msgs.length === 0) {
+    if (flow.action) { flow.action(); return; }
+    showQuickReplies(flow.replies || []);
+    return;
+  }
+
+  msgs.forEach((msg, i) => {
+    setTimeout(() => {
+      showBotTyping();
+      setTimeout(() => {
+        hideBotTyping();
+        showBotMessage(msg);
+        if (i === msgs.length - 1) {
+          if (flow.action)        setTimeout(flow.action, 600);
+          else if (flow.close)    setTimeout(closeOverlay, 1800);
+          else                    setTimeout(() => showQuickReplies(flow.replies || []), 350);
+        }
+      }, 750);
+    }, i * 1500);
+  });
+}
+
+function detectChatKeywords(text) {
+  const t = text.toLowerCase();
+  if (/exam|test|quiz|assignment|deadline|grades|study/.test(t)) return CHAT_FLOWS['Exams'];
+  if (/overwhelm|too much|can't cope|panic/.test(t))             return CHAT_FLOWS['Overwhelmed 😰'];
+  if (/lonely|alone|isolated|no friends/.test(t))               return CHAT_FLOWS['Social stuff'];
+  if (/tired|exhausted|sleep|fatigue/.test(t))                  return { messages: ["Rest is productive too 💜 Give yourself real permission to rest. Sleep matters more than one more hour of studying."], replies: ['Share a tip', 'Close chat'] };
+  if (/stress|anxious|anxiety|worried|scared/.test(t))          return CHAT_FLOWS['Stressed 😟'];
+  if (/good|great|fine|well|happy/.test(t))                     return CHAT_FLOWS['Feeling good 🙂'];
+  return { messages: ["Thanks for sharing 💜 I hear you. What would help most right now?"], replies: ['Try breathing', 'Challenge a thought', 'Connect with peers', 'Share a tip'] };
+}
+
+function showBotMessage(text) {
+  const el = document.createElement('div');
+  el.className = 'chat-bubble bot';
+  el.textContent = text;
+  appendChatBubble(el);
+}
+
+function showUserMessage(text) {
+  const el = document.createElement('div');
+  el.className = 'chat-bubble user';
+  el.textContent = text;
+  appendChatBubble(el);
+}
+
+function showBotTyping() {
+  const el = document.createElement('div');
+  el.className = 'chat-bubble bot';
+  el.innerHTML = '<span class="typing-dots"><span>●</span><span>●</span><span>●</span></span>';
+  appendChatBubble(el);
+  typingBubble = el;
+}
+
+function hideBotTyping() {
+  if (typingBubble) { typingBubble.remove(); typingBubble = null; }
+}
+
+function appendChatBubble(el) {
+  const messages = document.getElementById('chat-messages');
+  messages.appendChild(el);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function showQuickReplies(replies) {
+  const c = document.getElementById('chat-quick-replies');
+  c.innerHTML = replies.map(r =>
+    `<button class="chat-qr" onclick="handleQuickReply(this.textContent)">${r}</button>`
+  ).join('');
+}
+
+function handleQuickReply(text) {
+  showUserMessage(text);
+  document.getElementById('chat-quick-replies').innerHTML = '';
+  setTimeout(() => processChatFlow(text), 400);
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  handleQuickReply(text);
+}
+
+updateBotStatus();
