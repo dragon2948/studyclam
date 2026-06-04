@@ -531,9 +531,13 @@
         <h2>Rant Box 😤</h2>
         <p class="card-sub" style="text-align:center;margin-bottom:16px">Just let it out. No judgment, no structure.</p>
         <textarea class="cbt-input rant-textarea" id="rant-input"
-                  placeholder="What's on your mind? Type it all out..."
-                  oninput="saveRant()" rows="8"></textarea>
-        <button class="btn-primary" onclick="clearRant()">Clear &amp; Let Go 🌬️</button>
+                  placeholder="What's on your mind? Type it all out..." rows="5"></textarea>
+        <div class="rant-actions">
+          <button class="btn-primary" onclick="saveRant()">Save Rant 💾</button>
+          <button class="btn-outline" onclick="clearRant()">Clear 🌬️</button>
+        </div>
+        <p class="section-label" style="margin-top:20px;margin-bottom:10px">Your Rants This Session</p>
+        <div id="rant-history"></div>
       </div>
     </div>
 

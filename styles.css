@@ -789,11 +789,18 @@ canvas { width: 100% !important; height: 90px !important; }
 }
 
 /* ── Rant Textarea ── */
-.rant-textarea {
-  min-height: 160px;
-  resize: vertical;
-  line-height: 1.6;
+.rant-textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
+.rant-actions  { display: flex; gap: 8px; margin-top: 10px; }
+.rant-actions .btn-primary { margin-top: 0; }
+.rant-entry {
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
 }
+.rant-entry-time { font-size: .72rem; color: var(--text-sub); margin-bottom: 5px; }
+.rant-entry-text { font-size: .85rem; line-height: 1.5; white-space: pre-wrap; color: var(--text); }
+.rant-empty     { font-size: .83rem; color: var(--text-sub); text-align: center; padding: 10px 0; }
 
 /* ── Bot Hero Card ── */
 .bot-hero-card { background: linear-gradient(135deg, #7C5CFC22, #B39DFF44); }

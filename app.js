@@ -452,9 +452,10 @@ function computeMatches(answers) {
 }
 
 // ── Render Cards ──────────────────────────────────────────────
+const joinedGroupsSession = new Set();
+
 function renderMatchCards(matches, container) {
   if (!container) return;
-  const joined = JSON.parse(localStorage.getItem('sc_joined_groups') || '[]');
   container.innerHTML = matches.map(g => `
     <div class="match-card">
       <div class="match-emoji ${g.color}">${g.emoji}</div>
@@ -465,7 +466,7 @@ function renderMatchCards(matches, container) {
         <div class="match-meta">${g.members} members · Low commitment</div>
         ${g.reason ? `<div class="match-why">${g.reason}</div>` : ''}
       </div>
-      <button class="match-join${joined.includes(g.id) ? ' joined' : ''}" onclick="joinGroup('${g.id}', this)">${joined.includes(g.id) ? 'Joined ✓' : 'Join'}</button>
+      <button class="match-join${joinedGroupsSession.has(g.id) ? ' joined' : ''}" onclick="joinGroup('${g.id}', this)">${joinedGroupsSession.has(g.id) ? 'Joined ✓' : 'Join'}</button>
     </div>
   `).join('');
 }
@@ -475,11 +476,7 @@ function renderAllGroups() {
 }
 
 function joinGroup(id, btn) {
-  const joined = JSON.parse(localStorage.getItem('sc_joined_groups') || '[]');
-  if (!joined.includes(id)) {
-    joined.push(id);
-    localStorage.setItem('sc_joined_groups', JSON.stringify(joined));
-  }
+  joinedGroupsSession.add(id);
   btn.textContent = 'Joined ✓';
   btn.classList.add('joined');
 }
@@ -514,12 +511,8 @@ document.querySelectorAll('.ob-options').forEach(container => {
   });
 });
 
-// ── Onboarding Init Check ─────────────────────────────────────
-if (localStorage.getItem('sc_survey_done')) {
-  document.getElementById('onboarding').classList.add('hidden');
-  const saved = localStorage.getItem('sc_survey_answers');
-  if (saved) surveyAnswers = JSON.parse(saved);
-}
+// ── Presentation Mode: clear all data on every load ──────────
+Object.keys(localStorage).filter(k => k.startsWith('sc_')).forEach(k => localStorage.removeItem(k));
 
 // ── StudyBot Chat ─────────────────────────────────────────────
 const TIPS = [
@@ -870,20 +863,46 @@ function updateProfileStats() {
 // ── Rant Box ──────────────────────────────────────────────────
 function loadRant() {
   const el = document.getElementById('rant-input');
-  if (el) el.value = localStorage.getItem('sc_rant') || '';
+  if (el) { el.value = ''; el.placeholder = 'What\'s on your mind? Type it all out...'; }
+  renderRantHistory();
 }
 
 function saveRant() {
   const el = document.getElementById('rant-input');
-  if (el) localStorage.setItem('sc_rant', el.value);
+  const text = el?.value.trim();
+  if (!text) return;
+  el.value = '';
+  el.placeholder = 'Saved! Write another...';
+  const history = JSON.parse(localStorage.getItem('sc_rant_history') || '[]');
+  history.unshift({
+    text,
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  });
+  localStorage.setItem('sc_rant_history', JSON.stringify(history));
+  renderRantHistory();
 }
 
 function clearRant() {
-  localStorage.removeItem('sc_rant');
   const el = document.getElementById('rant-input');
   if (!el) return;
   el.value = '';
   el.placeholder = 'All clear 🌬️ Feeling a little lighter?';
+}
+
+function renderRantHistory() {
+  const list = document.getElementById('rant-history');
+  if (!list) return;
+  const history = JSON.parse(localStorage.getItem('sc_rant_history') || '[]');
+  if (!history.length) {
+    list.innerHTML = '<p class="rant-empty">No rants saved yet this session.</p>';
+    return;
+  }
+  list.innerHTML = history.map(r => `
+    <div class="rant-entry">
+      <p class="rant-entry-time">${r.time}</p>
+      <p class="rant-entry-text">${escHtml(r.text)}</p>
+    </div>
+  `).join('');
 }
 
 // ── Notifications ─────────────────────────────────────────────
