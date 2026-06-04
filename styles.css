@@ -767,6 +767,59 @@ canvas { width: 100% !important; height: 90px !important; }
   flex-shrink: 0;
 }
 
+/* ── Counsellor ── */
+.csl-step { display: none; }
+.csl-step.active { display: block; animation: fadeIn .2s ease; }
+.csl-confirm { text-align: center; padding: 24px 0 16px; }
+.csl-confirm-icon  { font-size: 3rem; margin-bottom: 12px; }
+.csl-confirm-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+.counselor-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.counselor-card:hover { background: var(--primary-light); }
+.counselor-avatar {
+  font-size: 1.6rem;
+  width: 44px; height: 44px;
+  background: var(--surface);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.counselor-info     { flex: 1; }
+.counselor-name     { font-size: .9rem; font-weight: 700; margin-bottom: 2px; }
+.counselor-role     { font-size: .76rem; color: var(--text-sub); }
+.counselor-avail    { font-size: .74rem; color: var(--primary); font-weight: 500; margin-top: 2px; }
+
+/* ── Sleep Better ── */
+.sleep-moon-wrap { text-align: center; padding: 12px 0 4px; }
+.sleep-moon      { font-size: 3.5rem; margin-bottom: 8px; }
+.sleep-tips      { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.sleep-tip       {
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: .84rem;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* ── Exam Planner ── */
+.exam-form { display: flex; flex-direction: column; }
+.exam-card { padding: 14px; }
+.exam-header  { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.exam-subject { font-size: .92rem; font-weight: 700; }
+.exam-date    { font-size: .76rem; color: var(--text-sub); margin-top: 2px; }
+.exam-checklist     { display: flex; flex-direction: column; gap: 6px; }
+.exam-check-item    { font-size: .82rem; color: var(--text-sub); padding-left: 4px; }
+
 /* ── Nudge Card ── */
 .nudge-card {
   background: linear-gradient(135deg, #FFF3E0, #FFE0B2);

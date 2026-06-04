@@ -100,12 +100,12 @@
         <span>Gratitude Journal</span>
         <span class="chevron">›</span>
       </div>
-      <div class="card list-card">
+      <div class="card list-card" onclick="openTool('sleep')">
         <span class="list-icon">🌙</span>
         <span>Sleep Better</span>
         <span class="chevron">›</span>
       </div>
-      <div class="card list-card">
+      <div class="card list-card" onclick="openTool('exam')">
         <span class="list-icon">📅</span>
         <span>Exam Prep Planner</span>
         <span class="chevron">›</span>
@@ -209,11 +209,11 @@
         </div>
         <span class="chevron">›</span>
       </div>
-      <div class="card list-card support-item">
+      <div class="card list-card support-item" onclick="openCounselor()">
         <div class="support-icon pink">🩺</div>
         <div>
-          <p class="card-title">Talk to a Counselor</p>
-          <p class="card-sub">Book a session</p>
+          <p class="card-title">Talk to a Counsellor</p>
+          <p class="card-sub">Book a confidential session</p>
         </div>
         <span class="chevron">›</span>
       </div>
@@ -521,6 +521,106 @@
         <input  class="cbt-input" id="share-author"  placeholder="Your name &amp; year (e.g. Alex · Year 3)" style="margin-bottom:10px" />
         <textarea class="cbt-input" id="share-content" rows="5" placeholder="Share your tips, summaries, or advice..."></textarea>
         <button class="btn-primary" onclick="submitNote()">Post Note</button>
+      </div>
+    </div>
+
+    <!-- Check-in Triggers Overlay -->
+    <div id="overlay-checkin-triggers" class="overlay">
+      <div class="overlay-card">
+        <h2>What's been weighing on you? 🤔</h2>
+        <p class="card-sub" style="text-align:center;margin-bottom:18px">Select any that apply — this helps track your triggers</p>
+        <div class="ob-chips" id="chips-triggers">
+          <div class="ob-chip" data-val="Workload">📚 Workload</div>
+          <div class="ob-chip" data-val="Exams">📝 Exams</div>
+          <div class="ob-chip" data-val="Sleep">😴 Sleep</div>
+          <div class="ob-chip" data-val="Social">👥 Social</div>
+          <div class="ob-chip" data-val="Deadlines">⏰ Deadlines</div>
+          <div class="ob-chip" data-val="Personal">💭 Personal</div>
+        </div>
+        <button class="btn-primary" onclick="saveTriggers()">Done</button>
+        <button class="btn-text ob-skip" onclick="skipTriggers()">Skip</button>
+      </div>
+    </div>
+
+    <!-- Counsellor Booking Overlay -->
+    <div id="overlay-counselor" class="overlay">
+      <div class="overlay-card cbt-card">
+        <button class="close-btn" onclick="closeOverlay()">✕</button>
+        <h2>Talk to a Counsellor 🩺</h2>
+
+        <div class="csl-step active" data-step="1">
+          <p class="cbt-q">What brings you here today?</p>
+          <p class="card-sub" style="margin-bottom:16px">Select all that apply — all sessions are confidential</p>
+          <div class="ob-chips" id="chips-csl-reason">
+            <div class="ob-chip" data-val="Academic stress">📚 Academic stress</div>
+            <div class="ob-chip" data-val="Anxiety">😰 Anxiety</div>
+            <div class="ob-chip" data-val="Burnout">😮‍💨 Burnout</div>
+            <div class="ob-chip" data-val="Relationships">👥 Relationships</div>
+            <div class="ob-chip" data-val="Low mood">😟 Low mood</div>
+            <div class="ob-chip" data-val="Personal issues">💭 Personal issues</div>
+            <div class="ob-chip" data-val="Other">🤍 Other</div>
+          </div>
+          <button class="btn-primary" onclick="cslNext()">Choose a Counsellor</button>
+        </div>
+
+        <div class="csl-step" data-step="2">
+          <p class="cbt-q">Choose a counsellor</p>
+          <p class="card-sub" style="margin-bottom:16px">All sessions are fully confidential</p>
+          <div id="counselor-list"></div>
+          <button class="btn-text ob-skip" onclick="cslBack()">Back</button>
+        </div>
+
+        <div class="csl-step" data-step="3">
+          <div class="csl-confirm">
+            <p class="csl-confirm-icon">✅</p>
+            <p class="csl-confirm-title" id="csl-confirm-title">Request Sent!</p>
+            <p class="card-sub" id="csl-confirm-msg">Your counsellor will message you shortly to arrange a session.</p>
+          </div>
+          <button class="btn-primary" onclick="closeOverlay()">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sleep Better Overlay -->
+    <div id="overlay-sleep" class="overlay">
+      <div class="overlay-card">
+        <button class="close-btn" onclick="closeOverlay()">✕</button>
+        <h2>Sleep Better 🌙</h2>
+        <div class="sleep-moon-wrap">
+          <div class="sleep-moon">🌙</div>
+          <p class="card-title" style="text-align:center;margin-bottom:4px">Wind Down Timer</p>
+          <p class="card-sub" style="text-align:center">Unplug and ease into sleep mode</p>
+        </div>
+        <div class="timer-controls" style="margin-top:14px">
+          <button class="btn-outline" onclick="setSleepTimer(10)">10m</button>
+          <button class="btn-outline" onclick="setSleepTimer(20)">20m</button>
+          <button class="btn-outline" onclick="setSleepTimer(30)">30m</button>
+        </div>
+        <div class="timer-display" id="sleepTimerDisplay">20:00</div>
+        <button class="btn-primary" id="sleepTimerBtn" onclick="toggleSleepTimer()">Start Wind Down</button>
+        <p class="section-label" style="margin-top:20px">Sleep Hygiene Tips</p>
+        <div class="sleep-tips">
+          <div class="sleep-tip">📵 Put your phone away 30 min before bed</div>
+          <div class="sleep-tip">🌡️ Keep your room cool (18–20°C)</div>
+          <div class="sleep-tip">📓 Write down tomorrow's tasks to clear your mind</div>
+          <div class="sleep-tip">🫁 Try 4-7-8 breathing: inhale 4s, hold 7s, exhale 8s</div>
+          <div class="sleep-tip">☕ Avoid caffeine after 2pm</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exam Prep Planner Overlay -->
+    <div id="overlay-exam" class="overlay">
+      <div class="overlay-card">
+        <button class="close-btn" onclick="closeOverlay()">✕</button>
+        <h2>Exam Prep Planner 📅</h2>
+        <div class="exam-form">
+          <input  class="cbt-input" id="exam-subject" placeholder="Subject (e.g. Data Structures)" style="margin-bottom:8px" />
+          <input  class="cbt-input" id="exam-date" type="date" style="margin-bottom:10px" />
+          <button class="btn-primary small" onclick="addExam()" style="width:100%">Add Exam</button>
+        </div>
+        <p class="section-label" style="margin-top:18px">Upcoming Exams</p>
+        <div id="exam-list"></div>
       </div>
     </div>
 

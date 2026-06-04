@@ -14,7 +14,7 @@ function navigate(page) {
   if (page === 'support') updateBotStatus();
   if (page === 'home')    updateNudge();
   if (page === 'profile') updateProfileStats();
-  if (page === 'journal') updateChartLabels(document.querySelector('.tab.active')?.dataset.tab || 'week');
+  if (page === 'journal') { updateChartLabels(document.querySelector('.tab.active')?.dataset.tab || 'week'); updateTriggerDisplay(); updateHelpsYou(); }
 }
 
 // ── Mood Selection ───────────────────────────────────────────
@@ -47,18 +47,25 @@ function openTool(name) {
   const el = document.getElementById('overlay-' + name);
   if (!el) return;
   el.classList.add('open');
-  if (name === 'cbt')  initCBT();
-  if (name === 'rant') loadRant();
+  if (name === 'cbt')   initCBT();
+  if (name === 'rant')  loadRant();
+  if (name === 'sleep') { sleepTimerSecs = 20 * 60; renderSleepTimer(); }
+  if (name === 'exam')  renderExamList();
 }
 
 function closeOverlay() {
   document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open'));
   stopBreathe();
   stopTimer();
+  stopSleepTimer();
 }
 
 document.querySelectorAll('.overlay').forEach(o => {
-  o.addEventListener('click', e => { if (e.target === o) closeOverlay(); });
+  o.addEventListener('click', e => {
+    if (e.target !== o) return;
+    if (o.id === 'overlay-checkin-triggers') skipTriggers();
+    else closeOverlay();
+  });
 });
 
 // ── Breathing Exercise ───────────────────────────────────────
@@ -830,7 +837,9 @@ function doCheckin() {
 
   localStorage.setItem('sc_last_checkin', todayKey());
   updateNudge();
-  navigate('journal');
+  // Reset trigger chips and open trigger overlay
+  document.querySelectorAll('#chips-triggers .ob-chip').forEach(c => c.classList.remove('selected'));
+  document.getElementById('overlay-checkin-triggers').classList.add('open');
 }
 
 function updateNudge() {
@@ -1130,6 +1139,212 @@ function submitNote() {
   if (sel) { sel.selectedIndex = 0; sel.style.borderColor = ''; }
   closeOverlay();
   renderNotes();
+}
+
+// ── Trigger Check-in ─────────────────────────────────────────
+function saveTriggers() {
+  const selected = Array.from(document.querySelectorAll('#chips-triggers .ob-chip.selected'))
+    .map(el => el.dataset.val);
+  if (selected.length) {
+    const hist = JSON.parse(localStorage.getItem('sc_trigger_history') || '[]');
+    hist.push({ date: todayKey(), triggers: selected });
+    localStorage.setItem('sc_trigger_history', JSON.stringify(hist));
+  }
+  document.querySelectorAll('#chips-triggers .ob-chip').forEach(c => c.classList.remove('selected'));
+  document.getElementById('overlay-checkin-triggers').classList.remove('open');
+  navigate('journal');
+}
+
+function skipTriggers() {
+  document.querySelectorAll('#chips-triggers .ob-chip').forEach(c => c.classList.remove('selected'));
+  document.getElementById('overlay-checkin-triggers').classList.remove('open');
+  navigate('journal');
+}
+
+function updateTriggerDisplay() {
+  const hist = JSON.parse(localStorage.getItem('sc_trigger_history') || '[]');
+  if (!hist.length) return;
+  const counts = {};
+  let total = 0;
+  hist.forEach(e => e.triggers.forEach(t => { counts[t] = (counts[t] || 0) + 1; total++; }));
+  if (!total) return;
+  const top3 = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const container = document.querySelector('#page-journal .triggers');
+  if (!container) return;
+  container.innerHTML = top3.map(([t, n]) => {
+    const pct = Math.round((n / total) * 100);
+    return `<div class="trigger-row">
+      <span>${t}</span>
+      <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
+      <span>${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+function updateHelpsYou() {
+  const helps = document.querySelector('.helps-row');
+  if (!helps) return;
+  const hobbies = surveyAnswers.hobbies || [];
+  const coping  = surveyAnswers.coping  || [];
+  const combined = [...new Set([...hobbies, ...coping])].filter(v => v !== 'Other' && v !== 'Social Media');
+  if (!combined.length) return;
+  const emojiMap = { Gaming:'🎮', Music:'🎵', Sports:'🏃', Art:'🎨', Reading:'📚',
+    Cooking:'🍳', Photography:'📷', Exercise:'🏃', Friends:'👥', Sleep:'😴', Meditation:'🧘' };
+  helps.innerHTML = combined.slice(0, 5)
+    .map(v => `<span class="helps-chip">${emojiMap[v] || '💙'} ${v}</span>`)
+    .join('');
+}
+
+// ── Counsellor Booking ─────────────────────────────────────────
+const COUNSELORS = [
+  { id: 'c1', emoji: '👩‍⚕️', name: 'Dr. Sarah Lim',   role: 'Student Wellbeing Counsellor', avail: 'Next available: Today 3pm' },
+  { id: 'c2', emoji: '👨‍⚕️', name: 'Mr. Jason Tan',   role: 'Mental Health Advisor',         avail: 'Next available: Tomorrow 10am' },
+  { id: 'c3', emoji: '👩‍⚕️', name: 'Ms. Nurul Ain',   role: 'Peer Support Coordinator',      avail: 'Next available: Today 5pm' },
+];
+let cslStep = 1;
+
+function openCounselor() {
+  cslStep = 1;
+  showCslStep(1);
+  renderCounselorList();
+  document.querySelectorAll('#chips-csl-reason .ob-chip').forEach(c => c.classList.remove('selected'));
+  document.getElementById('overlay-counselor').classList.add('open');
+}
+
+function showCslStep(step) {
+  document.querySelectorAll('.csl-step').forEach(s => s.classList.remove('active'));
+  const el = document.querySelector(`.csl-step[data-step="${step}"]`);
+  if (el) el.classList.add('active');
+}
+
+function cslNext() { cslStep++; showCslStep(cslStep); }
+function cslBack() { cslStep--; showCslStep(cslStep); }
+
+function renderCounselorList() {
+  const list = document.getElementById('counselor-list');
+  if (!list) return;
+  list.innerHTML = COUNSELORS.map(c => `
+    <div class="counselor-card" onclick="selectCounselor('${c.id}')">
+      <div class="counselor-avatar">${c.emoji}</div>
+      <div class="counselor-info">
+        <p class="counselor-name">${c.name}</p>
+        <p class="counselor-role">${c.role}</p>
+        <p class="counselor-avail">${c.avail}</p>
+      </div>
+      <span class="chevron">›</span>
+    </div>`).join('');
+}
+
+function selectCounselor(id) {
+  const c = COUNSELORS.find(x => x.id === id);
+  if (!c) return;
+  const reasons = Array.from(document.querySelectorAll('#chips-csl-reason .ob-chip.selected'))
+    .map(el => el.dataset.val).join(', ') || 'general support';
+  document.getElementById('csl-confirm-title').textContent = 'Request Sent! 🎉';
+  document.getElementById('csl-confirm-msg').textContent =
+    `${c.name} will message you shortly to arrange a confidential session about ${reasons}. You've got this 💜`;
+  cslStep = 3;
+  showCslStep(3);
+}
+
+// ── Sleep Timer ───────────────────────────────────────────────
+let sleepTimerSecs = 20 * 60;
+let sleepTimerInterval = null;
+let sleepTimerRunning = false;
+
+function setSleepTimer(mins) {
+  stopSleepTimer();
+  sleepTimerSecs = mins * 60;
+  renderSleepTimer();
+  const btn = document.getElementById('sleepTimerBtn');
+  if (btn) btn.textContent = 'Start Wind Down';
+}
+
+function toggleSleepTimer() {
+  const btn = document.getElementById('sleepTimerBtn');
+  if (sleepTimerRunning) {
+    stopSleepTimer();
+    if (btn) btn.textContent = 'Start Wind Down';
+  } else {
+    sleepTimerRunning = true;
+    if (btn) btn.textContent = 'Stop';
+    sleepTimerInterval = setInterval(() => {
+      sleepTimerSecs--;
+      renderSleepTimer();
+      if (sleepTimerSecs <= 0) {
+        stopSleepTimer();
+        const el = document.getElementById('sleepTimerDisplay');
+        if (el) el.textContent = '😴 Time for sleep!';
+        if (btn) btn.textContent = 'Start Wind Down';
+      }
+    }, 1000);
+  }
+}
+
+function stopSleepTimer() {
+  clearInterval(sleepTimerInterval);
+  sleepTimerInterval = null;
+  sleepTimerRunning = false;
+}
+
+function renderSleepTimer() {
+  const m = String(Math.floor(sleepTimerSecs / 60)).padStart(2, '0');
+  const s = String(sleepTimerSecs % 60).padStart(2, '0');
+  const el = document.getElementById('sleepTimerDisplay');
+  if (el) el.textContent = `${m}:${s}`;
+}
+
+// ── Exam Prep Planner ─────────────────────────────────────────
+function addExam() {
+  const subject = document.getElementById('exam-subject')?.value.trim();
+  const date    = document.getElementById('exam-date')?.value;
+  if (!subject || !date) {
+    ['exam-subject', 'exam-date'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.borderColor = el.value ? '' : '#e74c3c';
+    });
+    return;
+  }
+  const exams = JSON.parse(localStorage.getItem('sc_exams') || '[]');
+  exams.push({ id: 'e' + Date.now(), subject, date });
+  exams.sort((a, b) => new Date(a.date) - new Date(b.date));
+  localStorage.setItem('sc_exams', JSON.stringify(exams));
+  document.getElementById('exam-subject').value = '';
+  document.getElementById('exam-date').value = '';
+  ['exam-subject', 'exam-date'].forEach(id => { const el = document.getElementById(id); if (el) el.style.borderColor = ''; });
+  renderExamList();
+}
+
+function renderExamList() {
+  const list = document.getElementById('exam-list');
+  if (!list) return;
+  const exams = JSON.parse(localStorage.getItem('sc_exams') || '[]');
+  if (!exams.length) {
+    list.innerHTML = '<p style="font-size:.83rem;color:var(--text-sub);text-align:center;padding:10px 0">No exams added yet.</p>';
+    return;
+  }
+  list.innerHTML = exams.map(e => {
+    const days = Math.ceil((new Date(e.date) - new Date()) / 86400000);
+    const urgencyStyle = days <= 3 ? 'color:#e74c3c;font-weight:700' : days <= 7 ? 'color:#f39c12;font-weight:600' : 'color:var(--primary);font-weight:600';
+    const label = days < 0 ? 'Past' : days === 0 ? 'Today!' : days === 1 ? '1 day' : `${days} days`;
+    const checklist = getExamChecklist(days);
+    return `<div class="card exam-card">
+      <div class="exam-header">
+        <div><p class="exam-subject">${escHtml(e.subject)}</p>
+          <p class="exam-date">${new Date(e.date + 'T00:00:00').toLocaleDateString('en-SG', { day: 'numeric', month: 'short' })}</p>
+        </div>
+        <p style="${urgencyStyle}">${label}</p>
+      </div>
+      <div class="exam-checklist">${checklist.map(i => `<div class="exam-check-item">☐ ${i}</div>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function getExamChecklist(days) {
+  if (days > 14) return ['Make a study schedule', 'Gather notes & materials', 'Identify weak areas', 'Start revision early'];
+  if (days > 7)  return ['Review lecture notes', 'Practice past year papers', 'Join a study group', 'Clarify doubts with lecturers'];
+  if (days > 3)  return ['Focus on high-weightage topics', 'Do timed practice papers', 'Review weak areas', 'Prepare your exam kit'];
+  return ['Quick review of key concepts', 'Rest well tonight', 'Prepare your stationery', 'Trust your preparation 💜'];
 }
 
 // ── Page Init ─────────────────────────────────────────────────
