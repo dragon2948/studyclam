@@ -166,19 +166,19 @@
         <p class="card-sub">Connect, share, and get support from your campus community.</p>
       </div>
 
-      <div class="card list-card support-item">
+      <div class="card list-card support-item" onclick="navigate('groups')">
         <div class="support-icon blue">👥</div>
         <div>
           <p class="card-title">Peer Support Groups</p>
-          <p class="card-sub">Join a safe space</p>
+          <p class="card-sub">Browse all communities</p>
         </div>
         <span class="chevron">›</span>
       </div>
-      <div class="card list-card support-item">
+      <div class="card list-card support-item" onclick="openMatches()">
         <div class="support-icon green">🤝</div>
         <div>
           <p class="card-title">Get Matched</p>
-          <p class="card-sub">Talk to a peer mentor</p>
+          <p class="card-sub">Find your community</p>
         </div>
         <span class="chevron">›</span>
       </div>
@@ -323,6 +323,127 @@
           <p>5. Return to the present moment</p>
         </div>
         <button class="btn-primary">Begin (Audio coming soon)</button>
+      </div>
+    </div>
+
+    <!-- ── GROUPS PAGE ── -->
+    <section id="page-groups" class="page">
+      <div class="top-bar">
+        <button class="back-btn" onclick="navigate('support')">‹</button>
+        <h2 class="page-title">Communities</h2>
+      </div>
+      <p class="section-label">All Groups</p>
+      <div id="all-groups-list"></div>
+    </section>
+
+    <!-- ── ONBOARDING ── -->
+    <div id="onboarding" class="onboarding-screen">
+      <div class="ob-inner">
+
+        <!-- Step 0: Welcome -->
+        <div class="ob-step active" data-step="0">
+          <div class="ob-welcome">
+            <div class="ob-logo">🪷</div>
+            <h1 class="ob-title">Welcome to StudyCalm</h1>
+            <p class="ob-sub">Let's find communities that match your vibe to help you thrive — academically and socially.</p>
+            <button class="btn-primary" onclick="obNext()">Get Started</button>
+            <button class="btn-text ob-skip" onclick="finishOnboarding()">Skip for now</button>
+          </div>
+        </div>
+
+        <!-- Step 1: Hobbies -->
+        <div class="ob-step" data-step="1">
+          <div class="ob-progress"><div class="ob-progress-fill" style="width:25%"></div></div>
+          <p class="ob-step-label">1 of 4</p>
+          <h2 class="ob-q">What are your hobbies?</h2>
+          <p class="ob-hint">Select all that apply</p>
+          <div class="ob-chips" id="chips-hobbies">
+            <div class="ob-chip" data-val="Gaming">🎮 Gaming</div>
+            <div class="ob-chip" data-val="Music">🎵 Music</div>
+            <div class="ob-chip" data-val="Sports">🏃 Sports</div>
+            <div class="ob-chip" data-val="Art">🎨 Art</div>
+            <div class="ob-chip" data-val="Reading">📚 Reading</div>
+            <div class="ob-chip" data-val="Cooking">🍳 Cooking</div>
+            <div class="ob-chip" data-val="Photography">📷 Photography</div>
+            <div class="ob-chip" data-val="Other">✨ Other</div>
+          </div>
+          <button class="btn-primary" onclick="obNext()">Next</button>
+          <button class="btn-text ob-skip" onclick="finishOnboarding()">Skip survey</button>
+        </div>
+
+        <!-- Step 2: Stress coping -->
+        <div class="ob-step" data-step="2">
+          <div class="ob-progress"><div class="ob-progress-fill" style="width:50%"></div></div>
+          <p class="ob-step-label">2 of 4</p>
+          <h2 class="ob-q">How do you cope with stress?</h2>
+          <p class="ob-hint">Select all that apply</p>
+          <div class="ob-chips" id="chips-coping">
+            <div class="ob-chip" data-val="Exercise">🏃 Exercise</div>
+            <div class="ob-chip" data-val="Gaming">🎮 Gaming</div>
+            <div class="ob-chip" data-val="Music">🎵 Music</div>
+            <div class="ob-chip" data-val="Friends">👥 Friends</div>
+            <div class="ob-chip" data-val="Sleep">😴 Sleep</div>
+            <div class="ob-chip" data-val="Meditation">🧘 Meditation</div>
+            <div class="ob-chip" data-val="Social Media">📱 Social Media</div>
+          </div>
+          <button class="btn-primary" onclick="obNext()">Next</button>
+          <button class="btn-text ob-skip" onclick="obBack()">Back</button>
+        </div>
+
+        <!-- Step 3: Biggest struggle -->
+        <div class="ob-step" data-step="3">
+          <div class="ob-progress"><div class="ob-progress-fill" style="width:75%"></div></div>
+          <p class="ob-step-label">3 of 4</p>
+          <h2 class="ob-q">Your biggest academic struggle?</h2>
+          <p class="ob-hint">Choose one</p>
+          <div class="ob-options" id="options-struggle">
+            <div class="ob-option" data-val="Workload">📚 Heavy Workload</div>
+            <div class="ob-option" data-val="Deadlines">⏰ Meeting Deadlines</div>
+            <div class="ob-option" data-val="Motivation">💤 Staying Motivated</div>
+            <div class="ob-option" data-val="Focus">🎯 Staying Focused</div>
+            <div class="ob-option" data-val="Isolation">🤝 Feeling Isolated</div>
+          </div>
+          <button class="btn-primary" onclick="obNext()">Next</button>
+          <button class="btn-text ob-skip" onclick="obBack()">Back</button>
+        </div>
+
+        <!-- Step 4: Connection style -->
+        <div class="ob-step" data-step="4">
+          <div class="ob-progress"><div class="ob-progress-fill" style="width:100%"></div></div>
+          <p class="ob-step-label">4 of 4</p>
+          <h2 class="ob-q">How do you prefer to connect?</h2>
+          <p class="ob-hint">Choose one</p>
+          <div class="ob-options" id="options-connect">
+            <div class="ob-option" data-val="One-on-one">👤 One-on-one chats</div>
+            <div class="ob-option" data-val="Small group">👥 Small groups (3–5)</div>
+            <div class="ob-option" data-val="Community">🏘️ Larger communities</div>
+            <div class="ob-option" data-val="Online">💬 Online first</div>
+          </div>
+          <button class="btn-primary" onclick="obFinish()">See My Matches</button>
+          <button class="btn-text ob-skip" onclick="obBack()">Back</button>
+        </div>
+
+        <!-- Step 5: Results -->
+        <div class="ob-step" data-step="5">
+          <div class="ob-results-header">
+            <p class="ob-result-emoji">🎉</p>
+            <h2 class="ob-q">Your Matches</h2>
+            <p class="ob-hint">Communities picked just for you. Join any — it's low commitment!</p>
+          </div>
+          <div id="ob-matches"></div>
+          <button class="btn-primary" onclick="finishOnboarding()">Enter App</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Matches Overlay -->
+    <div id="overlay-matches" class="overlay">
+      <div class="overlay-card">
+        <button class="close-btn" onclick="closeOverlay()">✕</button>
+        <h2>Your Matches</h2>
+        <div id="overlay-matches-list"></div>
+        <button class="btn-text" style="text-align:center;margin-top:4px" onclick="navigate('groups');closeOverlay()">Browse all groups ›</button>
       </div>
     </div>
 

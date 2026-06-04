@@ -9,6 +9,7 @@ function navigate(page) {
 
   window.scrollTo(0, 0);
   if (page === 'journal') drawChart();
+  if (page === 'groups')  renderAllGroups();
 }
 
 // ── Mood Selection ───────────────────────────────────────────
@@ -276,3 +277,165 @@ window.addEventListener('resize', () => {
   const jp = document.getElementById('page-journal');
   if (jp && jp.classList.contains('active')) drawChart();
 });
+
+// ── Groups Data ───────────────────────────────────────────────
+const GROUPS = [
+  { id: 'gaming',      name: 'Gaming Circle',     emoji: '🎮', tag: 'Social',   color: 'blue',   desc: 'Unwind and connect over games',            matchHobbies: ['Gaming'],      matchCoping: ['Gaming'],    members: 48 },
+  { id: 'music',       name: 'Music & Chill',      emoji: '🎵', tag: 'Creative', color: 'pink',   desc: 'Jam sessions and playlist sharing',        matchHobbies: ['Music'],       matchCoping: ['Music'],     members: 35 },
+  { id: 'fitness',     name: 'Campus Fitness',     emoji: '🏃', tag: 'Active',   color: 'green',  desc: 'Group runs and workout buddies',           matchHobbies: ['Sports'],      matchCoping: ['Exercise'],  members: 62 },
+  { id: 'study',       name: 'Study Together',     emoji: '📚', tag: 'Academic', color: 'purple', desc: 'Focused group study and peer support',     matchHobbies: ['Reading'],     matchCoping: [],            members: 94 },
+  { id: 'art',         name: 'Art & Design',       emoji: '🎨', tag: 'Creative', color: 'pink',   desc: 'Create, share, and get inspired',         matchHobbies: ['Art'],         matchCoping: [],            members: 29 },
+  { id: 'mindfulness', name: 'Mindfulness Circle', emoji: '🧘', tag: 'Wellness', color: 'purple', desc: 'Meditation, breathing and stress relief',  matchHobbies: [],              matchCoping: ['Meditation'], members: 41 },
+  { id: 'photography', name: 'Photo Society',      emoji: '📷', tag: 'Creative', color: 'blue',   desc: 'Explore campus through a lens',            matchHobbies: ['Photography'], matchCoping: [],            members: 23 },
+  { id: 'cooking',     name: 'Cooking Club',       emoji: '🍳', tag: 'Social',   color: 'green',  desc: 'Cook, eat, and bond with others',         matchHobbies: ['Cooking'],     matchCoping: [],            members: 31 },
+];
+
+// ── Survey State ──────────────────────────────────────────────
+let obStep = 0;
+let surveyAnswers = {};
+
+function showObStep(step) {
+  document.querySelectorAll('.ob-step').forEach(s => s.classList.remove('active'));
+  const el = document.querySelector(`.ob-step[data-step="${step}"]`);
+  if (el) {
+    el.classList.add('active');
+    const inner = document.querySelector('.ob-inner');
+    if (inner) inner.scrollTop = 0;
+  }
+}
+
+function obNext() {
+  if (obStep === 1) surveyAnswers.hobbies  = getSelectedChips('chips-hobbies');
+  if (obStep === 2) surveyAnswers.coping   = getSelectedChips('chips-coping');
+  if (obStep === 3) surveyAnswers.struggle = getSelectedOption('options-struggle');
+  obStep++;
+  showObStep(obStep);
+}
+
+function obBack() {
+  if (obStep > 1) { obStep--; showObStep(obStep); }
+}
+
+function obFinish() {
+  surveyAnswers.connect = getSelectedOption('options-connect');
+  const matches = computeMatches(surveyAnswers);
+  renderMatchCards(matches, document.getElementById('ob-matches'));
+  obStep = 5;
+  showObStep(5);
+}
+
+function finishOnboarding() {
+  localStorage.setItem('sc_survey_done', '1');
+  localStorage.setItem('sc_survey_answers', JSON.stringify(surveyAnswers));
+  document.getElementById('onboarding').classList.add('hidden');
+  navigate('home');
+}
+
+function getSelectedChips(containerId) {
+  return Array.from(document.querySelectorAll(`#${containerId} .ob-chip.selected`))
+    .map(el => el.dataset.val);
+}
+
+function getSelectedOption(containerId) {
+  const el = document.querySelector(`#${containerId} .ob-option.selected`);
+  return el ? el.dataset.val : null;
+}
+
+// ── Matching Algorithm ────────────────────────────────────────
+function computeMatches(answers) {
+  const scored = GROUPS.map(g => {
+    const mH = (answers.hobbies || []).filter(h => g.matchHobbies.includes(h));
+    const mC = (answers.coping  || []).filter(c => g.matchCoping.includes(c));
+    let score = mH.length * 2 + mC.length * 2;
+    if (answers.struggle === 'Isolation' && ['Social', 'Active'].includes(g.tag)) score++;
+    if (answers.struggle === 'Motivation' && g.id === 'study') score++;
+    const all = [...mH, ...mC];
+    const reason = all.length > 0
+      ? `Matches your interest in ${all.slice(0, 2).join(' & ')}`
+      : score > 0 ? 'Great for reducing academic stress' : 'Recommended for your wellbeing';
+    return { ...g, score, reason };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  const top = scored.filter(g => g.score > 0).slice(0, 4);
+
+  if (top.length < 3) {
+    ['study', 'mindfulness'].forEach(id => {
+      if (!top.find(m => m.id === id) && top.length < 4) {
+        const g = GROUPS.find(g => g.id === id);
+        if (g) top.push({ ...g, score: 0, reason: 'Recommended for your wellbeing' });
+      }
+    });
+  }
+  return top.slice(0, 4);
+}
+
+// ── Render Cards ──────────────────────────────────────────────
+function renderMatchCards(matches, container) {
+  if (!container) return;
+  const joined = JSON.parse(localStorage.getItem('sc_joined_groups') || '[]');
+  container.innerHTML = matches.map(g => `
+    <div class="match-card">
+      <div class="match-emoji ${g.color}">${g.emoji}</div>
+      <div class="match-info">
+        <div class="match-name">${g.name}</div>
+        <span class="match-tag">${g.tag}</span>
+        <div class="match-desc">${g.desc}</div>
+        <div class="match-meta">${g.members} members · Low commitment</div>
+        ${g.reason ? `<div class="match-why">${g.reason}</div>` : ''}
+      </div>
+      <button class="match-join${joined.includes(g.id) ? ' joined' : ''}" onclick="joinGroup('${g.id}', this)">${joined.includes(g.id) ? 'Joined ✓' : 'Join'}</button>
+    </div>
+  `).join('');
+}
+
+function renderAllGroups() {
+  renderMatchCards(GROUPS, document.getElementById('all-groups-list'));
+}
+
+function joinGroup(id, btn) {
+  const joined = JSON.parse(localStorage.getItem('sc_joined_groups') || '[]');
+  if (!joined.includes(id)) {
+    joined.push(id);
+    localStorage.setItem('sc_joined_groups', JSON.stringify(joined));
+  }
+  btn.textContent = 'Joined ✓';
+  btn.classList.add('joined');
+}
+
+function openMatches() {
+  if (!localStorage.getItem('sc_survey_done')) {
+    document.getElementById('onboarding').classList.remove('hidden');
+    obStep = 0;
+    showObStep(0);
+    return;
+  }
+  const matches = computeMatches(surveyAnswers);
+  renderMatchCards(matches, document.getElementById('overlay-matches-list'));
+  document.getElementById('overlay-matches').classList.add('open');
+}
+
+// ── Chip / Option Interaction ─────────────────────────────────
+document.querySelectorAll('.ob-chips').forEach(container => {
+  container.addEventListener('click', e => {
+    const chip = e.target.closest('.ob-chip');
+    if (chip) chip.classList.toggle('selected');
+  });
+});
+
+document.querySelectorAll('.ob-options').forEach(container => {
+  container.addEventListener('click', e => {
+    const opt = e.target.closest('.ob-option');
+    if (opt) {
+      container.querySelectorAll('.ob-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+    }
+  });
+});
+
+// ── Onboarding Init Check ─────────────────────────────────────
+if (localStorage.getItem('sc_survey_done')) {
+  document.getElementById('onboarding').classList.add('hidden');
+  const saved = localStorage.getItem('sc_survey_answers');
+  if (saved) surveyAnswers = JSON.parse(saved);
+}
