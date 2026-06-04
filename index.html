@@ -30,13 +30,20 @@
         <button class="mood-btn" data-mood="5">😄<span>Great</span></button>
       </div>
 
+      <div id="checkin-nudge" class="card nudge-card" style="display:none">
+        <div class="nudge-inner">
+          <span class="nudge-icon">🔥</span>
+          <p class="nudge-text">Check in today to keep your streak alive!</p>
+        </div>
+      </div>
+
       <div class="card checkin-card">
         <div class="checkin-icon">🧠</div>
         <div>
           <p class="card-title">Daily Check-in</p>
           <p class="card-sub">Track your mood and stress level in 1 minute</p>
         </div>
-        <button class="btn-primary small" onclick="navigate('journal')">Check-in</button>
+        <button class="btn-primary small" onclick="doCheckin()">Check-in</button>
       </div>
 
       <p class="section-label">Today's Plan</p>
@@ -103,6 +110,11 @@
         <span>Exam Prep Planner</span>
         <span class="chevron">›</span>
       </div>
+      <div class="card list-card" onclick="openTool('rant')">
+        <span class="list-icon">😤</span>
+        <span>Rant Box</span>
+        <span class="chevron">›</span>
+      </div>
     </section>
 
     <!-- ── JOURNAL / INSIGHTS PAGE ── -->
@@ -118,14 +130,15 @@
       </div>
 
       <div class="card">
-        <p class="card-title">Stress Trend</p>
-        <p class="card-sub">You've been feeling more stressed this week.</p>
+        <p class="card-title">Mood Trend</p>
+        <p class="card-sub" id="chart-subtitle">Check in daily to see your trend here.</p>
         <div class="chart-wrap">
           <canvas id="stressChart"></canvas>
         </div>
-        <div class="chart-labels">
+        <div class="chart-labels" id="chart-labels">
           <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
         </div>
+        <p class="chart-legend">1 = Anxious · 5 = Great</p>
       </div>
 
       <p class="section-label">Top Triggers</p>
@@ -188,11 +201,11 @@
         </div>
         <span class="chevron">›</span>
       </div>
-      <div class="card list-card support-item">
+      <div class="card list-card support-item" onclick="navigate('notes')">
         <div class="support-icon purple">📚</div>
         <div>
-          <p class="card-title">Resources</p>
-          <p class="card-sub">Articles, videos, helplines</p>
+          <p class="card-title">Senior Notes</p>
+          <p class="card-sub">Tips &amp; notes from seniors</p>
         </div>
         <span class="chevron">›</span>
       </div>
@@ -220,15 +233,15 @@
 
       <div class="card stats-row">
         <div class="stat">
-          <p class="stat-num">12</p>
-          <p class="stat-label">Day Streak</p>
+          <p class="stat-num" id="stat-streak">0</p>
+          <p class="stat-label">Wk Streak</p>
         </div>
         <div class="stat">
-          <p class="stat-num">8</p>
-          <p class="stat-label">Sessions</p>
+          <p class="stat-num" id="stat-sessions">0</p>
+          <p class="stat-label">Check-ins</p>
         </div>
         <div class="stat">
-          <p class="stat-num">4.2</p>
+          <p class="stat-num" id="stat-mood">—</p>
           <p class="stat-label">Avg Mood</p>
         </div>
       </div>
@@ -342,6 +355,17 @@
       <div id="all-groups-list"></div>
     </section>
 
+    <!-- ── NOTES / FORUM PAGE ── -->
+    <section id="page-notes" class="page">
+      <div class="top-bar">
+        <button class="back-btn" onclick="navigate('support')">‹</button>
+        <h2 class="page-title">Senior Notes</h2>
+        <button class="btn-primary small" onclick="openShareNote()">+ Share</button>
+      </div>
+      <div class="note-filters" id="note-filters"></div>
+      <div id="notes-list"></div>
+    </section>
+
     <!-- ── ONBOARDING ── -->
     <div id="onboarding" class="onboarding-screen">
       <div class="ob-inner">
@@ -359,8 +383,8 @@
 
         <!-- Step 1: Hobbies -->
         <div class="ob-step" data-step="1">
-          <div class="ob-progress"><div class="ob-progress-fill" style="width:25%"></div></div>
-          <p class="ob-step-label">1 of 4</p>
+          <div class="ob-progress"><div class="ob-progress-fill" style="width:20%"></div></div>
+          <p class="ob-step-label">1 of 5</p>
           <h2 class="ob-q">What are your hobbies?</h2>
           <p class="ob-hint">Select all that apply</p>
           <div class="ob-chips" id="chips-hobbies">
@@ -377,10 +401,28 @@
           <button class="btn-text ob-skip" onclick="finishOnboarding()">Skip survey</button>
         </div>
 
-        <!-- Step 2: Stress coping -->
+        <!-- Step 2: Course -->
         <div class="ob-step" data-step="2">
-          <div class="ob-progress"><div class="ob-progress-fill" style="width:50%"></div></div>
-          <p class="ob-step-label">2 of 4</p>
+          <div class="ob-progress"><div class="ob-progress-fill" style="width:40%"></div></div>
+          <p class="ob-step-label">2 of 5</p>
+          <h2 class="ob-q">What's your course?</h2>
+          <p class="ob-hint">We'll tailor your group recommendations</p>
+          <div class="ob-options" id="options-course">
+            <div class="ob-option" data-val="Computer Science">💻 Computer Science / IT</div>
+            <div class="ob-option" data-val="Engineering">⚙️ Engineering</div>
+            <div class="ob-option" data-val="Business">📊 Business / Finance</div>
+            <div class="ob-option" data-val="Design">🎨 Design / Arts</div>
+            <div class="ob-option" data-val="Health">🏥 Health Sciences</div>
+            <div class="ob-option" data-val="Other">📚 Other</div>
+          </div>
+          <button class="btn-primary" onclick="obNext()">Next</button>
+          <button class="btn-text ob-skip" onclick="obBack()">Back</button>
+        </div>
+
+        <!-- Step 3: Stress coping -->
+        <div class="ob-step" data-step="3">
+          <div class="ob-progress"><div class="ob-progress-fill" style="width:60%"></div></div>
+          <p class="ob-step-label">3 of 5</p>
           <h2 class="ob-q">How do you cope with stress?</h2>
           <p class="ob-hint">Select all that apply</p>
           <div class="ob-chips" id="chips-coping">
@@ -396,10 +438,10 @@
           <button class="btn-text ob-skip" onclick="obBack()">Back</button>
         </div>
 
-        <!-- Step 3: Biggest struggle -->
-        <div class="ob-step" data-step="3">
-          <div class="ob-progress"><div class="ob-progress-fill" style="width:75%"></div></div>
-          <p class="ob-step-label">3 of 4</p>
+        <!-- Step 4: Biggest struggle -->
+        <div class="ob-step" data-step="4">
+          <div class="ob-progress"><div class="ob-progress-fill" style="width:80%"></div></div>
+          <p class="ob-step-label">4 of 5</p>
           <h2 class="ob-q">Your biggest academic struggle?</h2>
           <p class="ob-hint">Choose one</p>
           <div class="ob-options" id="options-struggle">
@@ -413,10 +455,10 @@
           <button class="btn-text ob-skip" onclick="obBack()">Back</button>
         </div>
 
-        <!-- Step 4: Connection style -->
-        <div class="ob-step" data-step="4">
+        <!-- Step 5: Connection style -->
+        <div class="ob-step" data-step="5">
           <div class="ob-progress"><div class="ob-progress-fill" style="width:100%"></div></div>
-          <p class="ob-step-label">4 of 4</p>
+          <p class="ob-step-label">5 of 5</p>
           <h2 class="ob-q">How do you prefer to connect?</h2>
           <p class="ob-hint">Choose one</p>
           <div class="ob-options" id="options-connect">
@@ -429,8 +471,8 @@
           <button class="btn-text ob-skip" onclick="obBack()">Back</button>
         </div>
 
-        <!-- Step 5: Results -->
-        <div class="ob-step" data-step="5">
+        <!-- Step 6: Results -->
+        <div class="ob-step" data-step="6">
           <div class="ob-results-header">
             <p class="ob-result-emoji">🎉</p>
             <h2 class="ob-q">Your Matches</h2>
@@ -440,6 +482,58 @@
           <button class="btn-primary" onclick="finishOnboarding()">Enter App</button>
         </div>
 
+      </div>
+    </div>
+
+    <!-- Note Thread Overlay -->
+    <div id="overlay-note-thread" class="overlay">
+      <div class="overlay-card thread-card">
+        <div class="thread-hd">
+          <span class="match-tag" id="thread-course-tag"></span>
+          <button class="close-btn" style="position:static;margin-left:auto" onclick="closeOverlay()">✕</button>
+        </div>
+        <div class="thread-body" id="thread-body"></div>
+        <div class="thread-input-row">
+          <input class="chat-input" id="comment-input"
+                 placeholder="Add to the discussion..."
+                 onkeydown="if(event.key==='Enter')submitComment()" />
+          <button class="chat-send" onclick="submitComment()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Share Note Overlay -->
+    <div id="overlay-share-note" class="overlay">
+      <div class="overlay-card">
+        <button class="close-btn" onclick="closeOverlay()">✕</button>
+        <h2>Share a Note 📝</h2>
+        <p class="card-sub" style="text-align:center;margin-bottom:18px">Help your juniors by sharing what you know.</p>
+        <input  class="cbt-input" id="share-title"   placeholder="Note title (e.g. Tips for OS Module)" style="margin-bottom:10px" />
+        <select class="cbt-input" id="share-course" style="margin-bottom:10px">
+          <option value="">Select course...</option>
+          <option>Computer Science</option>
+          <option>Engineering</option>
+          <option>Business</option>
+          <option>Design</option>
+          <option>Health</option>
+          <option>General</option>
+        </select>
+        <input  class="cbt-input" id="share-author"  placeholder="Your name &amp; year (e.g. Alex · Year 3)" style="margin-bottom:10px" />
+        <textarea class="cbt-input" id="share-content" rows="5" placeholder="Share your tips, summaries, or advice..."></textarea>
+        <button class="btn-primary" onclick="submitNote()">Post Note</button>
+      </div>
+    </div>
+
+    <!-- Rant Box Overlay -->
+    <div id="overlay-rant" class="overlay">
+      <div class="overlay-card">
+        <button class="close-btn" onclick="closeOverlay()">✕</button>
+        <h2>Rant Box 😤</h2>
+        <p class="card-sub" style="text-align:center;margin-bottom:16px">Just let it out. No judgment, no structure.</p>
+        <textarea class="cbt-input rant-textarea" id="rant-input"
+                  placeholder="What's on your mind? Type it all out..."
+                  oninput="saveRant()" rows="8"></textarea>
+        <button class="btn-primary" onclick="clearRant()">Clear &amp; Let Go 🌬️</button>
       </div>
     </div>
 
